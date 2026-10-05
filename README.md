@@ -1,66 +1,81 @@
-# sketchwash · 手绘水彩滤镜
+# sketchwash
 
-把 SVG 变成**铅笔线条 + 水彩上色**的手绘风格，直接导出 X / 社交媒体的头像和横幅。
+Turn any SVG into a **hand-drawn watercolor sketch**: wobbly pencil lines, watercolor fills with slight misregistration, and paper grain. Export avatars and banners for social media in one click.
 
-**在线使用 →** https://idea2tool.github.io/sketchwash/
+**Try it →** https://idea2tool.github.io/sketchwash/
 
-![sketchwash 截图](docs/screenshot.png)
+[中文说明](#中文说明)
 
-## 功能
+![sketchwash screenshot](docs/screenshot-en.png)
 
-- 拖入、选择或直接粘贴 SVG
-- 三种画风：水彩、蜡笔、铅笔线稿
-- 可调：线条抖动、线条粗细、颜色错位、纸张纹理、留白、颜色
-- 「换一种笔触」：同样的参数，换一组随机笔触
-- 导出 PNG（头像 400×400、横幅 1500×500、任意宽度）和 SVG
-- 单个 HTML 文件，没有依赖，不需要安装
+## Features
 
-## 和其他工具有什么不同
+- Drop, pick or paste an SVG
+- Three styles: watercolor, crayon, pencil only
+- Adjust line wobble, line width, color offset, paper grain, padding and colors
+- "New strokes": same settings, a fresh set of random strokes
+- Export PNG (avatar 400×400, banner 1500×500, any width) or SVG
+- One HTML file, no dependencies, nothing to install
+- English and Chinese UI (switches automatically, or use `?lang=en` / `?lang=zh`)
 
-[svg2roughjs](https://github.com/fskpf/svg2roughjs) 用 Rough.js 把图形重新画一遍，效果是白板草图风。sketchwash 不重画图形，而是用 SVG 滤镜（`feTurbulence` + `feDisplacementMap`）处理原图，效果是水彩绘本风，渐变、文字和复杂路径都会保留。
+## How is it different?
 
-## 隐私和安全
+[svg2roughjs](https://github.com/fskpf/svg2roughjs) redraws every shape with Rough.js and gives a whiteboard-sketch look. sketchwash does not redraw shapes. It runs the original SVG through SVG filters (`feTurbulence` + `feDisplacementMap`) for a picture-book watercolor look, so gradients, text and complex paths are kept.
 
-- **全部在浏览器里运行**，文件不会上传到任何地方
-- **只支持 SVG 矢量图，不支持照片**。这是有意的设计：避免被用来处理真人照片。SVG 里内嵌的位图会被移除
-- 导入时用**白名单**清理：只保留 SVG 的图形、渐变、遮罩等安全元素；链接只允许页内引用（`#id`）；`<style>` 由浏览器解析后只保留安全的样式属性，转义写法和外部资源一律删除
-- 限制文件大小、元素数量和 `<use>` 嵌套，防止恶意文件卡死浏览器
-- 预览用 `<img>` 显示，浏览器不会运行图片里的代码
+## Privacy and security
 
-## 使用须知
+- **Runs entirely in your browser.** Nothing is uploaded.
+- **SVG only, no photos, by design**, so the tool cannot be used on photos of real people. Embedded raster images are stripped.
+- Imported SVGs are sanitized with an **allowlist**: only safe SVG elements and style properties are kept, links must be local (`#id`), stylesheets are parsed by the browser and re-applied as safe inline styles, and escapes or external resources are removed.
+- File size, element count and `<use>` nesting are limited, so a malicious file cannot freeze the browser.
+- Previews are shown with `<img>`, so code inside an SVG never runs.
 
-请勿用于违法、低俗、侵权或冒充他人的内容。你上传的 SVG 和导出的图片，版权和责任归你自己。
+## Acceptable use
 
-## 可选：给 SVG 加提示
+Please do not use it for illegal, obscene, infringing or impersonating content. You are responsible for the SVGs you use and the images you export.
 
-在元素上加 `data-sw` 属性，可以控制它的画法：
+## Optional hints in your SVG
 
-| 属性 | 效果 | 适合 |
+Add a `data-sw` attribute to an element to control how it is drawn:
+
+| Attribute | Effect | Good for |
 |---|---|---|
-| `data-sw="ink"` | 保持原色，不改成铅笔描边 | 眼睛高光、小字 |
-| `data-sw="soft"` | 不画铅笔轮廓 | 腮红、高光 |
+| `data-sw="ink"` | Keep its original color, no pencil outline | Eye highlights, small text |
+| `data-sw="soft"` | No pencil outline | Blush, highlights |
 
-不加也可以：又小又深的实心图形会自动当作「墨迹」处理。
+Without hints, small dark solid shapes are treated as ink automatically.
 
-## 本地运行
+## Run locally
 
-直接用浏览器打开 `index.html` 即可。如果浏览器限制本地文件，可以运行：
+Open `index.html` in a browser. If your browser blocks local files, run:
 
 ```bash
 python3 -m http.server 5173
 ```
 
-然后打开 http://127.0.0.1:5173/
+Then open http://127.0.0.1:5173/
+
+Made with AI by [@idea2tool](https://github.com/idea2tool). MIT License.
 
 ---
 
-## English
+## 中文说明
 
-**sketchwash** turns any SVG into a hand-drawn look: wobbly pencil lines, watercolor fills with slight misregistration, and paper grain. Export PNG avatars (400×400) and banners (1500×500) for social media.
+把 SVG 变成**铅笔线条 + 水彩上色**的手绘风格，直接导出 X / 社交媒体的头像和横幅。
 
-- Runs entirely in your browser. Nothing is uploaded.
-- SVG only, no photos, by design. Embedded raster images are stripped.
-- Imported SVGs are sanitized with an allowlist: only safe SVG elements and style properties are kept, links must be local (`#id`), stylesheets are parsed by the browser and re-applied as safe inline styles, and size / node / `<use>` nesting limits apply.
-- Please do not use it for illegal, obscene, infringing or impersonating content.
+**在线使用 →** https://idea2tool.github.io/sketchwash/?lang=zh
 
-Made with AI by [@idea2tool](https://github.com/idea2tool). MIT License.
+![sketchwash 截图](docs/screenshot.png)
+
+- 拖入、选择或直接粘贴 SVG；三种画风：水彩、蜡笔、铅笔线稿
+- 可调：线条抖动、线条粗细、颜色错位、纸张纹理、留白、颜色；「换一种笔触」换一组随机笔触
+- 导出 PNG（头像 400×400、横幅 1500×500、任意宽度）和 SVG
+- 单个 HTML 文件，没有依赖，不需要安装；中英文界面自动切换
+
+**和其他工具的区别**：svg2roughjs 把图形重新画一遍，是白板草图风；sketchwash 用 SVG 滤镜处理原图，是水彩绘本风，渐变、文字和复杂路径都会保留。
+
+**隐私和安全**：全部在浏览器里运行，文件不会上传。只支持 SVG 矢量图，不支持照片，这是有意的设计，避免被用来处理真人照片。导入时用白名单清理，脚本、外部资源和内嵌位图都会被删除。
+
+**使用须知**：请勿用于违法、低俗、侵权或冒充他人的内容。你使用的 SVG 和导出的图片，版权和责任归你自己。
+
+**可选提示**：元素上加 `data-sw="ink"` 保持原色、不描铅笔轮廓（适合眼睛高光、小字）；加 `data-sw="soft"` 不描铅笔轮廓（适合腮红、高光）。

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>sketchwash · 手绘水彩滤镜</title>
-<meta name="description" content="把 SVG 变成铅笔线条加水彩上色的手绘风格，导出头像和横幅。全部在浏览器里运行，文件不会上传。">
+<meta name="description" content="Turn any SVG into a hand-drawn watercolor sketch and export avatars and banners. Runs in your browser. 把 SVG 变成手绘水彩风格，导出头像和横幅。">
 <style>
 :root {
   --bg: #F6F3EE;
@@ -52,6 +52,7 @@ body {
   font: 15px/1.55 -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 header { max-width: 1180px; margin: 0 auto; padding: 32px 16px 8px; }
+.topline { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
 h1 span { color: var(--text-3); font-weight: 500; }
 .tagline { margin: 6px 0 0; color: var(--text-2); }
@@ -146,81 +147,84 @@ footer a { color: var(--text-2); }
 </head>
 <body>
 <header>
-  <h1>sketchwash <span>手绘水彩滤镜</span></h1>
-  <p class="tagline">把 SVG 变成铅笔线条加水彩上色的手绘风格，直接导出头像和横幅。</p>
+  <div class="topline">
+    <h1>sketchwash <span data-i18n="subtitle">手绘水彩滤镜</span></h1>
+    <button type="button" class="link" id="lang" lang="en">English</button>
+  </div>
+  <p class="tagline" data-i18n="tagline">把 SVG 变成铅笔线条加水彩上色的手绘风格，直接导出头像和横幅。</p>
 </header>
 
 <main>
   <div class="controls">
     <section class="panel">
-      <h2>1 · 选择 SVG</h2>
+      <h2 data-i18n="step1">1 · 选择 SVG</h2>
       <label class="drop" id="drop">
         <input type="file" id="file" accept=".svg,image/svg+xml">
-        <strong>拖入 SVG 文件，或点这里选择</strong>
-        <small>也可以直接粘贴 SVG 代码（⌘V / Ctrl+V）</small>
+        <strong data-i18n="dropTitle">拖入 SVG 文件，或点这里选择</strong>
+        <small data-i18n="dropHint">也可以直接粘贴 SVG 代码（⌘V / Ctrl+V）</small>
       </label>
-      <div class="examples" id="examples"><span>示例：</span></div>
+      <div class="examples" id="examples"><span data-i18n="examples">示例：</span></div>
       <p class="msg" id="msg" hidden></p>
     </section>
 
     <section class="panel">
-      <h2>2 · 画风</h2>
-      <div class="seg" id="presets" role="group" aria-label="画风">
-        <button type="button" data-preset="wash" aria-pressed="true">水彩</button>
-        <button type="button" data-preset="crayon" aria-pressed="false">蜡笔</button>
-        <button type="button" data-preset="pencil" aria-pressed="false">铅笔线稿</button>
+      <h2 data-i18n="step2">2 · 画风</h2>
+      <div class="seg" id="presets" role="group" data-i18n-aria="step2">
+        <button type="button" data-preset="wash" aria-pressed="true" data-i18n="wash">水彩</button>
+        <button type="button" data-preset="crayon" aria-pressed="false" data-i18n="crayon">蜡笔</button>
+        <button type="button" data-preset="pencil" aria-pressed="false" data-i18n="pencil">铅笔线稿</button>
       </div>
-      <div class="field"><label for="jitter">线条抖动 <output for="jitter"></output></label><input type="range" id="jitter" min="0" max="14" step="0.5"></div>
-      <div class="field"><label for="line">线条粗细 <output for="line"></output></label><input type="range" id="line" min="1" max="10" step="0.5"></div>
-      <div class="field"><label for="offset">颜色错位 <output for="offset"></output></label><input type="range" id="offset" min="0" max="12" step="1"></div>
-      <div class="field"><label for="paper">纸张纹理 <output for="paper"></output></label><input type="range" id="paper" min="0" max="0.6" step="0.02"></div>
-      <div class="field"><label for="pad">留白 <output for="pad"></output></label><input type="range" id="pad" min="0" max="0.3" step="0.01"></div>
+      <div class="field"><label for="jitter"><span data-i18n="jitter">线条抖动</span> <output for="jitter"></output></label><input type="range" id="jitter" min="0" max="14" step="0.5"></div>
+      <div class="field"><label for="line"><span data-i18n="line">线条粗细</span> <output for="line"></output></label><input type="range" id="line" min="1" max="10" step="0.5"></div>
+      <div class="field"><label for="offset"><span data-i18n="offset">颜色错位</span> <output for="offset"></output></label><input type="range" id="offset" min="0" max="12" step="1"></div>
+      <div class="field"><label for="paper"><span data-i18n="paper">纸张纹理</span> <output for="paper"></output></label><input type="range" id="paper" min="0" max="0.6" step="0.02"></div>
+      <div class="field"><label for="pad"><span data-i18n="pad">留白</span> <output for="pad"></output></label><input type="range" id="pad" min="0" max="0.3" step="0.01"></div>
       <div class="colors">
-        <div class="color"><label for="paperColor">纸张</label><input type="color" id="paperColor"></div>
-        <div class="color"><label for="ink">线条</label><input type="color" id="ink"></div>
-        <div class="color"><label><input type="checkbox" id="blob"> 背景色块</label><input type="color" id="blobColor" aria-label="背景色块颜色"></div>
+        <div class="color"><label for="paperColor" data-i18n="paperColor">纸张</label><input type="color" id="paperColor"></div>
+        <div class="color"><label for="ink" data-i18n="ink">线条</label><input type="color" id="ink"></div>
+        <div class="color"><label><input type="checkbox" id="blob"> <span data-i18n="blob">背景色块</span></label><input type="color" id="blobColor" data-i18n-aria="blobColor"></div>
       </div>
       <div class="colors" style="grid-template-columns:1fr 2fr">
-        <div class="color"><label for="tint">单色部分</label><input type="color" id="tint"></div>
-        <p class="hint" style="align-self:end">原图里用 currentColor 的部分（常见于线条图标）上色时用这个颜色。</p>
+        <div class="color"><label for="tint" data-i18n="tint">单色部分</label><input type="color" id="tint"></div>
+        <p class="hint" style="align-self:end" data-i18n="tintHint">原图里用 currentColor 的部分（常见于线条图标）上色时用这个颜色。</p>
       </div>
-      <div class="row"><button type="button" class="link" id="reseed">换一种笔触 ↻</button></div>
+      <div class="row"><button type="button" class="link" id="reseed" data-i18n="reseed">换一种笔触 ↻</button></div>
     </section>
 
     <section class="panel">
-      <h2>3 · 导出</h2>
-      <div class="seg" id="frames" role="group" aria-label="画布">
-        <button type="button" data-frame="square" aria-pressed="true">头像 1:1</button>
-        <button type="button" data-frame="banner" aria-pressed="false">横幅 3:1</button>
-        <button type="button" data-frame="original" aria-pressed="false">原比例</button>
+      <h2 data-i18n="step3">3 · 导出</h2>
+      <div class="seg" id="frames" role="group" data-i18n-aria="canvas">
+        <button type="button" data-frame="square" aria-pressed="true" data-i18n="square">头像 1:1</button>
+        <button type="button" data-frame="banner" aria-pressed="false" data-i18n="banner">横幅 3:1</button>
+        <button type="button" data-frame="original" aria-pressed="false" data-i18n="original">原比例</button>
       </div>
       <div class="row">
-        <label for="exportW">导出宽度</label>
+        <label for="exportW" data-i18n="exportW">导出宽度</label>
         <input type="number" id="exportW" min="64" max="4096" step="1"> <span class="hint" id="exportH" style="margin:0"></span>
       </div>
       <div class="actions">
-        <button type="button" class="btn-primary" id="dlPng">下载 PNG</button>
-        <button type="button" class="btn-secondary" id="dlSvg">下载 SVG</button>
+        <button type="button" class="btn-primary" id="dlPng" data-i18n="dlPng">下载 PNG</button>
+        <button type="button" class="btn-secondary" id="dlSvg" data-i18n="dlSvg">下载 SVG</button>
       </div>
-      <p class="hint">X 头像建议 400×400，横幅建议 1500×500。</p>
+      <p class="hint" data-i18n="sizeHint">X 头像建议 400×400，横幅建议 1500×500。</p>
     </section>
   </div>
 
   <div class="previews">
     <section class="card">
-      <h2>原图</h2>
-      <div class="stage"><img id="before" alt="原图预览"></div>
+      <h2 data-i18n="before">原图</h2>
+      <div class="stage"><img id="before" data-i18n-alt="beforeAlt" alt="原图预览"></div>
     </section>
     <section class="card">
-      <h2>手绘版 <label class="toggle" id="circleWrap"><input type="checkbox" id="circle" checked> 圆形裁切预览</label></h2>
-      <div class="stage"><img id="after" alt="手绘版预览"></div>
+      <h2><span data-i18n="after">手绘版</span> <label class="toggle" id="circleWrap"><input type="checkbox" id="circle" checked> <span data-i18n="circle">圆形裁切预览</span></label></h2>
+      <div class="stage"><img id="after" data-i18n-alt="afterAlt" alt="手绘版预览"></div>
     </section>
   </div>
 </main>
 
 <footer>
-  <p>全部在你的浏览器里运行，文件不会上传到任何地方。只支持 SVG 矢量图，不支持照片：这是有意的设计。</p>
-  <p>请勿用于违法、低俗、侵权或冒充他人的内容。 · <a href="https://github.com/idea2tool/sketchwash">GitHub</a> · MIT License</p>
+  <p data-i18n="privacy">全部在你的浏览器里运行，文件不会上传到任何地方。只支持 SVG 矢量图，不支持照片：这是有意的设计。</p>
+  <p><span data-i18n="terms">请勿用于违法、低俗、侵权或冒充他人的内容。</span> · <a href="https://github.com/idea2tool/sketchwash">GitHub</a> · MIT License</p>
 </footer>
 
 <script>
@@ -229,7 +233,7 @@ footer a { color: var(--text-2); }
 /* ---------- 示例（全部是原创图形） ---------- */
 // data-sw="ink"：保持原色的实心墨迹（眼睛、文字）；data-sw="soft"：不描边（腮红、高光）
 const EXAMPLES = {
-  '灯泡': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 -10 330 370">
+  bulb: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 -10 330 370">
   <path d="M200 20 L200 2 M118 52 L104 38 M282 52 L296 38 M82 128 L62 124 M318 128 L338 124" fill="none"/>
   <path d="M140 225 A100 100 0 1 1 260 225 Q248 248 246 272 L154 272 Q152 248 140 225 Z" fill="#FFE08A"/>
   <g transform="translate(200 168) rotate(40) scale(.9)">
@@ -242,7 +246,7 @@ const EXAMPLES = {
   <path data-sw="soft" d="M150 120 Q156 84 188 68" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
   <path d="M330 222 Q335 250 358 256 Q335 262 330 290 Q325 262 302 256 Q325 250 330 222Z" fill="#7BE3A6"/>
 </svg>`,
-  '企鹅': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="60 110 280 280">
+  penguin: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="60 110 280 280">
   <defs><mask id="laptop" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="400">
     <rect width="400" height="400" fill="#fff"/><rect x="112" y="268" width="176" height="140" rx="12" fill="#000"/>
   </mask></defs>
@@ -262,7 +266,7 @@ const EXAMPLES = {
   <circle data-sw="ink" cx="236" cy="198" r="3.5" fill="#fff"/>
   <text data-sw="ink" x="150" y="342" font-family="Menlo, monospace" font-weight="700" font-size="46" fill="#8EF0B6">&gt;_</text>
 </svg>`,
-  '机器人': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 20 320 380">
+  robot: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 20 320 380">
   <line x1="200" y1="114" x2="200" y2="80" fill="none"/>
   <path d="M200 36 Q204 58 222 62 Q204 66 200 88 Q196 66 178 62 Q196 58 200 36Z" fill="#F07A55"/>
   <rect x="120" y="318" width="160" height="80" rx="36" fill="#FBF6EC"/>
@@ -275,7 +279,7 @@ const EXAMPLES = {
   <path data-sw="ink" d="M144 216 Q160 192 176 216 M224 216 Q240 192 256 216" fill="none" stroke="#7BE3A6" stroke-width="11" stroke-linecap="round"/>
   <path data-sw="ink" d="M178 242 Q200 260 222 242" fill="none" stroke="#7BE3A6" stroke-width="8" stroke-linecap="round"/>
 </svg>`,
-  '橘猫': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="60 40 300 320">
+  cat: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="60 40 300 320">
   <polygon points="104,172 120,72 194,132" fill="#F0A05A"/>
   <polygon points="296,172 280,72 206,132" fill="#F0A05A"/>
   <polygon data-sw="soft" points="124,150 131,102 168,134" fill="#FFD0AE"/>
@@ -396,14 +400,14 @@ function cleanAttributes(el) {
 }
 
 function sanitize(text) {
-  if (text.length > MAX_BYTES) throw new Error('文件太大了（超过 2 MB）。');
-  if (/<!ENTITY/i.test(text)) throw new Error('不支持带实体声明（<!ENTITY>）的 SVG。');
+  if (text.length > MAX_BYTES) throw new Error(t('errTooBig'));
+  if (/<!ENTITY/i.test(text)) throw new Error(t('errEntity'));
   const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
   const root = doc.documentElement;
   if (doc.querySelector('parsererror') || root.namespaceURI !== SVG_NS || root.localName !== 'svg') {
-    throw new Error('这不是有效的 SVG 文件。');
+    throw new Error(t('errInvalid'));
   }
-  if (root.getElementsByTagName('*').length > MAX_NODES) throw new Error('这个 SVG 太复杂了（元素超过 2 万个）。');
+  if (root.getElementsByTagName('*').length > MAX_NODES) throw new Error(t('errNodes'));
 
   inlineStylesheets(root);
   let images = 0;
@@ -433,7 +437,7 @@ function sanitize(text) {
     const ref = (use.getAttribute('href') || use.getAttributeNS(XLINK_NS, 'href') || '').slice(1);
     const target = ref && root.querySelector(`[id="${CSS.escape(ref)}"]`);
     if (target && (target.localName === 'use' || target.getElementsByTagNameNS(SVG_NS, 'use').length)) {
-      throw new Error('不支持多层嵌套的 <use>。');
+      throw new Error(t('errUse'));
     }
   }
   return { root, images };
@@ -470,13 +474,13 @@ function measure(root) {
   shadow.replaceChildren(svg);
   if (!vb) {
     const b = svg.getBBox();
-    if (!(b.width > 0 && b.height > 0)) throw new Error('这个 SVG 里没有可见的图形。');
+    if (!(b.width > 0 && b.height > 0)) throw new Error(t('errEmpty'));
     vb = [b.x, b.y, b.width, b.height];
   }
   const [, , vw, vh] = vb;
   if (!vb.every(Number.isFinite) || vw < 1e-6 || vh < 1e-6 || vw > 1e7 || vh > 1e7 || vw / vh > 50 || vh / vw > 50) {
     shadow.replaceChildren();
-    throw new Error('这个 SVG 的尺寸不正常（太大、太小或太扁）。');
+    throw new Error(t('errSize'));
   }
   svg.setAttribute('viewBox', vb.join(' '));
   svg.setAttribute('width', 400);
@@ -613,7 +617,7 @@ function load(text) {
     const { root, images } = sanitize(text);
     state.source = measure(root);
     showImg($('#before'), new XMLSerializer().serializeToString(state.source.svg));
-    message(images ? `已移除 ${images} 张内嵌位图。sketchwash 只处理矢量图形，不处理照片。` : '');
+    message(images ? t('removedImages', { n: images }) : '');
     render();
   } catch (err) {
     shadow.replaceChildren();
@@ -625,7 +629,7 @@ async function loadFile(file) {
   if (!file) return;
   const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name);
   if (!isSvg) {
-    message('只支持 SVG 矢量图。照片、PNG、JPG 不支持，这是有意的设计：避免被用来处理真人照片。', 'error');
+    message(t('errNotSvg'), 'error');
     return;
   }
   load(await file.text());
@@ -647,7 +651,7 @@ function updateExportSize() {
   if (!state.source) return;
   const { W, H } = frameSize(state.frame, state.source.vb);
   const w = Number($('#exportW').value) || FRAMES[state.frame];
-  $('#exportH').textContent = `× ${Math.round(w * H / W)} 像素`;
+  $('#exportH').textContent = t('px', { h: Math.round(w * H / W) });
 }
 
 function pressed(groupSel, attr, value) {
@@ -699,10 +703,10 @@ window.addEventListener('paste', e => {
   const text = e.clipboardData.getData('text');
   if (/<svg[\s>]/i.test(text)) { e.preventDefault(); load(text); }
 });
-for (const name of Object.keys(EXAMPLES)) {
+for (const id of Object.keys(EXAMPLES)) {
   const b = document.createElement('button');
-  b.type = 'button'; b.className = 'chip'; b.textContent = name;
-  b.addEventListener('click', () => load(EXAMPLES[name]));
+  b.type = 'button'; b.className = 'chip'; b.dataset.i18n = 'ex_' + id;
+  b.addEventListener('click', () => load(EXAMPLES[id]));
   $('#examples').append(b);
 }
 
@@ -735,16 +739,97 @@ $('#dlPng').addEventListener('click', async () => {
     const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
     download(blob, `sketchwash-${outW}x${outH}.png`);
   } catch {
-    message('导出失败了。请换一个浏览器（推荐 Chrome）再试一次。', 'error');
+    message(t('errExport'), 'error');
   } finally {
     URL.revokeObjectURL(url);
   }
 });
 
+
+/* ---------- 中英文界面 ---------- */
+const I18N = {
+  zh: {
+    title: 'sketchwash · 手绘水彩滤镜', switchTo: 'English',
+    subtitle: '手绘水彩滤镜', tagline: '把 SVG 变成铅笔线条加水彩上色的手绘风格，直接导出头像和横幅。',
+    step1: '1 · 选择 SVG', dropTitle: '拖入 SVG 文件，或点这里选择', dropHint: '也可以直接粘贴 SVG 代码（⌘V / Ctrl+V）',
+    examples: '示例：', ex_bulb: '灯泡', ex_penguin: '企鹅', ex_robot: '机器人', ex_cat: '橘猫',
+    step2: '2 · 画风', wash: '水彩', crayon: '蜡笔', pencil: '铅笔线稿',
+    jitter: '线条抖动', line: '线条粗细', offset: '颜色错位', paper: '纸张纹理', pad: '留白',
+    paperColor: '纸张', ink: '线条', blob: '背景色块', blobColor: '背景色块颜色',
+    tint: '单色部分', tintHint: '原图里用 currentColor 的部分（常见于线条图标）上色时用这个颜色。', reseed: '换一种笔触 ↻',
+    step3: '3 · 导出', canvas: '画布', square: '头像 1:1', banner: '横幅 3:1', original: '原比例',
+    exportW: '导出宽度', px: '× {h} 像素', dlPng: '下载 PNG', dlSvg: '下载 SVG', sizeHint: 'X 头像建议 400×400，横幅建议 1500×500。',
+    before: '原图', beforeAlt: '原图预览', after: '手绘版', afterAlt: '手绘版预览', circle: '圆形裁切预览',
+    privacy: '全部在你的浏览器里运行，文件不会上传到任何地方。只支持 SVG 矢量图，不支持照片：这是有意的设计。',
+    terms: '请勿用于违法、低俗、侵权或冒充他人的内容。',
+    removedImages: '已移除 {n} 张内嵌位图。sketchwash 只处理矢量图形，不处理照片。',
+    errTooBig: '文件太大了（超过 2 MB）。', errEntity: '不支持带实体声明（<!ENTITY>）的 SVG。',
+    errInvalid: '这不是有效的 SVG 文件。', errNodes: '这个 SVG 太复杂了（元素超过 2 万个）。',
+    errUse: '不支持多层嵌套的 <use>。', errEmpty: '这个 SVG 里没有可见的图形。',
+    errSize: '这个 SVG 的尺寸不正常（太大、太小或太扁）。',
+    errNotSvg: '只支持 SVG 矢量图。照片、PNG、JPG 不支持，这是有意的设计：避免被用来处理真人照片。',
+    errExport: '导出失败了。请换一个浏览器（推荐 Chrome）再试一次。',
+  },
+  en: {
+    title: 'sketchwash · hand-drawn watercolor filter', switchTo: '中文',
+    subtitle: 'hand-drawn watercolor filter', tagline: 'Turn any SVG into pencil lines and watercolor fills. Export avatars and banners in one click.',
+    step1: '1 · Pick an SVG', dropTitle: 'Drop an SVG file here, or click to choose', dropHint: 'You can also paste SVG code (⌘V / Ctrl+V)',
+    examples: 'Examples:', ex_bulb: 'Bulb', ex_penguin: 'Penguin', ex_robot: 'Robot', ex_cat: 'Cat',
+    step2: '2 · Style', wash: 'Watercolor', crayon: 'Crayon', pencil: 'Pencil only',
+    jitter: 'Line wobble', line: 'Line width', offset: 'Color offset', paper: 'Paper grain', pad: 'Padding',
+    paperColor: 'Paper', ink: 'Lines', blob: 'Backdrop', blobColor: 'Backdrop color',
+    tint: 'Mono parts', tintHint: 'Used to color parts drawn with currentColor (common in line icons).', reseed: 'New strokes ↻',
+    step3: '3 · Export', canvas: 'Canvas', square: 'Avatar 1:1', banner: 'Banner 3:1', original: 'Original',
+    exportW: 'Width', px: '× {h} px', dlPng: 'Download PNG', dlSvg: 'Download SVG', sizeHint: 'For X: avatar 400×400, banner 1500×500.',
+    before: 'Original', beforeAlt: 'Original preview', after: 'Hand-drawn', afterAlt: 'Hand-drawn preview', circle: 'Circle crop',
+    privacy: 'Runs entirely in your browser. Nothing is uploaded. SVG only, no photos, by design.',
+    terms: 'Please do not use it for illegal, obscene, infringing or impersonating content.',
+    removedImages: 'Removed {n} embedded raster image(s). sketchwash only works with vector shapes, not photos.',
+    errTooBig: 'File is too large (over 2 MB).', errEntity: 'SVGs with entity declarations (<!ENTITY>) are not supported.',
+    errInvalid: 'This is not a valid SVG file.', errNodes: 'This SVG is too complex (over 20,000 elements).',
+    errUse: 'Nested <use> references are not supported.', errEmpty: 'This SVG has no visible shapes.',
+    errSize: 'This SVG has an unusual size (too large, too small or too narrow).',
+    errNotSvg: 'Only SVG vector files are supported. Photos, PNG and JPG are not, by design, so the tool cannot be used on photos of real people.',
+    errExport: 'Export failed. Please try another browser (Chrome recommended).',
+  },
+};
+
+// 语言：网址 ?lang= 优先，其次是上次的选择，最后看浏览器语言
+let lang = (() => {
+  const q = new URLSearchParams(location.search).get('lang');
+  if (q === 'zh' || q === 'en') return q;
+  try { const saved = localStorage.getItem('sketchwash-lang'); if (saved === 'zh' || saved === 'en') return saved; } catch {}
+  return /^zh\b/i.test(navigator.language || '') ? 'zh' : 'en';
+})();
+
+function t(key, vars = {}) {
+  return (I18N[lang][key] ?? I18N.zh[key] ?? key).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+}
+
+function applyLang() {
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+  document.title = t('title');
+  for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = t(el.dataset.i18n);
+  for (const el of document.querySelectorAll('[data-i18n-aria]')) el.setAttribute('aria-label', t(el.dataset.i18nAria));
+  for (const el of document.querySelectorAll('[data-i18n-alt]')) el.alt = t(el.dataset.i18nAlt);
+  const btn = $('#lang');
+  btn.textContent = t('switchTo');
+  btn.lang = lang === 'zh' ? 'en' : 'zh-CN';
+  $('#msg').hidden = true;
+  updateExportSize();
+}
+
+$('#lang').addEventListener('click', () => {
+  lang = lang === 'zh' ? 'en' : 'zh';
+  try { localStorage.setItem('sketchwash-lang', lang); } catch {}
+  applyLang();
+});
+
 // 启动
 $('#exportW').value = FRAMES.square;
 syncControls();
-load(EXAMPLES['灯泡']);
+applyLang();
+load(EXAMPLES.bulb);
 </script>
 </body>
 </html>
