@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sketchwash · 手绘水彩滤镜</title>
+<meta name="description" content="把 SVG 变成铅笔线条加水彩上色的手绘风格，导出头像和横幅。全部在浏览器里运行，文件不会上传。">
+<style>
+:root {
+  --bg: #F6F3EE;
+  --surface: #FFFFFF;
+  --surface-2: #EFEAE3;
+  --text: #24211E;
+  --text-2: #6B645C;
+  --text-3: #9A938A;
+  --accent: #C9542F;
+  --accent-hover: #B2482A;
+  --on-accent: #FFFFFF;
+  --accent-soft: #F6E1D8;
+  --notice-bg: #FFF4D6;
+  --notice-text: #6B5410;
+  --error-bg: #FBE3E1;
+  --error-text: #8C1D18;
+  --focus: #2F6FDE;
+  --shadow: 0 4px 6px rgba(40, 30, 20, .05), 0 1px 3px rgba(40, 30, 20, .08);
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171513;
+    --surface: #23201E;
+    --surface-2: #2F2B28;
+    --text: #F1ECE6;
+    --text-2: #B8B0A6;
+    --text-3: #857D74;
+    --accent: #E8774F;
+    --accent-hover: #F08A64;
+    --on-accent: #1A1410;
+    --accent-soft: #3A2A22;
+    --notice-bg: #3A3220;
+    --notice-text: #EBD9A6;
+    --error-bg: #3D2321;
+    --error-text: #F2B8B3;
+    --shadow: none;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+header { max-width: 1180px; margin: 0 auto; padding: 32px 16px 8px; }
+h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+h1 span { color: var(--text-3); font-weight: 500; }
+.tagline { margin: 6px 0 0; color: var(--text-2); }
+main {
+  max-width: 1180px; margin: 0 auto; padding: 16px;
+  display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start;
+}
+@media (max-width: 860px) {
+  main { grid-template-columns: 1fr; }
+  .previews { order: -1; }
+}
+.panel { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+.panel + .panel { margin-top: 16px; }
+h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--text-2); letter-spacing: .04em; }
+
+/* 输入区 */
+.drop {
+  display: block; padding: 22px 14px; border-radius: 10px; text-align: center; cursor: pointer;
+  background: var(--surface-2); color: var(--text-2);
+  outline: 2px dashed transparent; outline-offset: -6px; transition: outline-color .15s, background .15s;
+}
+.drop:hover, .drop.over { outline-color: var(--accent); background: var(--accent-soft); }
+.drop strong { display: block; color: var(--text); font-weight: 600; }
+.drop small { color: var(--text-3); }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.drop:focus-within { outline-color: var(--focus); }
+.examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+.examples > span { color: var(--text-3); font-size: 13px; }
+
+/* 按钮层级：一个实心主按钮，其余用浅底或链接样式 */
+button { font: inherit; cursor: pointer; border: 0; border-radius: 8px; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.btn-primary { background: var(--accent); color: var(--on-accent); font-weight: 600; padding: 10px 16px; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-secondary { background: var(--surface-2); color: var(--text); font-weight: 500; padding: 10px 14px; }
+.btn-secondary:hover { background: var(--accent-soft); }
+.chip { background: var(--surface-2); color: var(--text); padding: 4px 12px; border-radius: 999px; font-size: 13px; }
+.chip:hover { background: var(--accent-soft); }
+.link { background: none; color: var(--accent); padding: 0; font-weight: 500; }
+.link:hover { text-decoration: underline; }
+
+/* 分段选择 */
+.seg { display: flex; background: var(--surface-2); border-radius: 10px; padding: 3px; gap: 3px; }
+.seg button { flex: 1; padding: 7px 6px; background: none; color: var(--text-2); font-weight: 500; border-radius: 7px; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: var(--shadow); }
+@media (prefers-color-scheme: dark) { .seg button[aria-pressed="true"] { background: #3D3834; } }
+
+/* 滑块 */
+.field { margin-top: 14px; }
+.field label { display: flex; justify-content: space-between; font-size: 14px; color: var(--text); }
+.field output { color: var(--text-3); font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; margin: 6px 0 0; accent-color: var(--accent); }
+.colors { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 16px; }
+.color { font-size: 13px; color: var(--text-2); }
+.color input[type=color] { display: block; width: 100%; height: 34px; margin-top: 4px; padding: 0; border: 0; border-radius: 8px; background: none; cursor: pointer; }
+.color label { display: flex; gap: 6px; align-items: center; }
+.row { display: flex; gap: 10px; align-items: center; margin-top: 14px; }
+.row label { font-size: 14px; }
+input[type=number] {
+  width: 96px; padding: 7px 8px; border: 0; border-radius: 8px;
+  background: var(--surface-2); color: var(--text); font: inherit;
+}
+.actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.hint { margin: 10px 0 0; font-size: 13px; color: var(--text-3); }
+
+/* 提示条 */
+.msg { margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+.msg.notice { background: var(--notice-bg); color: var(--notice-text); }
+.msg.error { background: var(--error-bg); color: var(--error-text); }
+.msg[hidden] { display: none; }
+
+/* 预览 */
+.previews { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; }
+@media (max-width: 560px) {
+  .previews { grid-template-columns: 1fr; }
+  .previews .card:first-child .stage { min-height: 0; }
+  .previews .card:first-child .stage img { max-height: 140px; }
+}
+.card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
+.card h2 { display: flex; justify-content: space-between; align-items: center; }
+.stage { display: grid; place-items: center; min-height: 220px; border-radius: 10px; background: var(--surface-2); padding: 12px; }
+.stage img { width: 100%; height: auto; max-height: 62vh; object-fit: contain; display: block; }
+.stage img.circle { border-radius: 50%; }
+.toggle { font-size: 13px; font-weight: 500; color: var(--text-2); display: flex; gap: 6px; align-items: center; }
+.toggle input { accent-color: var(--accent); }
+.toggle[hidden] { display: none; }
+
+footer { max-width: 1180px; margin: 0 auto; padding: 12px 16px 40px; color: var(--text-3); font-size: 13px; }
+footer p { margin: 4px 0; }
+footer a { color: var(--text-2); }
+</style>
+</head>
+<body>
+<header>
+  <h1>sketchwash <span>手绘水彩滤镜</span></h1>
+  <p class="tagline">把 SVG 变成铅笔线条加水彩上色的手绘风格，直接导出头像和横幅。</p>
+</header>
+
+<main>
+  <div class="controls">
+    <section class="panel">
+      <h2>1 · 选择 SVG</h2>
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept=".svg,image/svg+xml">
+        <strong>拖入 SVG 文件，或点这里选择</strong>
+        <small>也可以直接粘贴 SVG 代码（⌘V / Ctrl+V）</small>
+      </label>
+      <div class="examples" id="examples"><span>示例：</span></div>
+      <p class="msg" id="msg" hidden></p>
+    </section>
+
+    <section class="panel">
+      <h2>2 · 画风</h2>
+      <div class="seg" id="presets" role="group" aria-label="画风">
+        <button type="button" data-preset="wash" aria-pressed="true">水彩</button>
+        <button type="button" data-preset="crayon" aria-pressed="false">蜡笔</button>
+        <button type="button" data-preset="pencil" aria-pressed="false">铅笔线稿</button>
+      </div>
+      <div class="field"><label for="jitter">线条抖动 <output for="jitter"></output></label><input type="range" id="jitter" min="0" max="14" step="0.5"></div>
+      <div class="field"><label for="line">线条粗细 <output for="line"></output></label><input type="range" id="line" min="1" max="10" step="0.5"></div>
+      <div class="field"><label for="offset">颜色错位 <output for="offset"></output></label><input type="range" id="offset" min="0" max="12" step="1"></div>
+      <div class="field"><label for="paper">纸张纹理 <output for="paper"></output></label><input type="range" id="paper" min="0" max="0.6" step="0.02"></div>
+      <div class="field"><label for="pad">留白 <output for="pad"></output></label><input type="range" id="pad" min="0" max="0.3" step="0.01"></div>
+      <div class="colors">
+        <div class="color"><label for="paperColor">纸张</label><input type="color" id="paperColor"></div>
+        <div class="color"><label for="ink">线条</label><input type="color" id="ink"></div>
+        <div class="color"><label><input type="checkbox" id="blob"> 背景色块</label><input type="color" id="blobColor" aria-label="背景色块颜色"></div>
+      </div>
+      <div class="colors" style="grid-template-columns:1fr 2fr">
+        <div class="color"><label for="tint">单色部分</label><input type="color" id="tint"></div>
+        <p class="hint" style="align-self:end">原图里用 currentColor 的部分（常见于线条图标）上色时用这个颜色。</p>
+      </div>
+      <div class="row"><button type="button" class="link" id="reseed">换一种笔触 ↻</button></div>
+    </section>
+
+    <section class="panel">
+      <h2>3 · 导出</h2>
+      <div class="seg" id="frames" role="group" aria-label="画布">
+        <button type="button" data-frame="square" aria-pressed="true">头像 1:1</button>
+        <button type="button" data-frame="banner" aria-pressed="false">横幅 3:1</button>
+        <button type="button" data-frame="original" aria-pressed="false">原比例</button>
+      </div>
+      <div class="row">
+        <label for="exportW">导出宽度</label>
+        <input type="number" id="exportW" min="64" max="4096" step="1"> <span class="hint" id="exportH" style="margin:0"></span>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn-primary" id="dlPng">下载 PNG</button>
+        <button type="button" class="btn-secondary" id="dlSvg">下载 SVG</button>
+      </div>
+      <p class="hint">X 头像建议 400×400，横幅建议 1500×500。</p>
+    </section>
+  </div>
+
+  <div class="previews">
+    <section class="card">
+      <h2>原图</h2>
+      <div class="stage"><img id="before" alt="原图预览"></div>
+    </section>
+    <section class="card">
+      <h2>手绘版 <label class="toggle" id="circleWrap"><input type="checkbox" id="circle" checked> 圆形裁切预览</label></h2>
+      <div class="stage"><img id="after" alt="手绘版预览"></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <p>全部在你的浏览器里运行，文件不会上传到任何地方。只支持 SVG 矢量图，不支持照片：这是有意的设计。</p>
+  <p>请勿用于违法、低俗、侵权或冒充他人的内容。 · <a href="https://github.com/idea2tool/sketchwash">GitHub</a> · MIT License</p>
+</footer>
+
+<script>
+'use strict';
+
+/* ---------- 示例（全部是原创图形） ---------- */
+// data-sw="ink"：保持原色的实心墨迹（眼睛、文字）；data-sw="soft"：不描边（腮红、高光）
+const EXAMPLES = {
+  '灯泡': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 -10 330 370">
+  <path d="M200 20 L200 2 M118 52 L104 38 M282 52 L296 38 M82 128 L62 124 M318 128 L338 124" fill="none"/>
+  <path d="M140 225 A100 100 0 1 1 260 225 Q248 248 246 272 L154 272 Q152 248 140 225 Z" fill="#FFE08A"/>
+  <g transform="translate(200 168) rotate(40) scale(.9)">
+    <rect x="-13" y="6" width="26" height="96" rx="13" fill="#F07A55"/>
+    <path d="M-30 -40 A34 34 0 1 0 30 -40 L14 -40 L14 -14 L-14 -14 L-14 -40 Z" fill="#F07A55"/>
+  </g>
+  <rect x="154" y="272" width="92" height="26" rx="8" fill="#8A93A3"/>
+  <rect x="160" y="298" width="80" height="24" rx="8" fill="#A9B0BC"/>
+  <path d="M176 322 L224 322 Q218 344 200 346 Q182 344 176 322 Z" fill="#5E6878"/>
+  <path data-sw="soft" d="M150 120 Q156 84 188 68" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
+  <path d="M330 222 Q335 250 358 256 Q335 262 330 290 Q325 262 302 256 Q325 250 330 222Z" fill="#7BE3A6"/>
+</svg>`,
+  '企鹅': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="60 110 280 280">
+  <defs><mask id="laptop" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="400">
+    <rect width="400" height="400" fill="#fff"/><rect x="112" y="268" width="176" height="140" rx="12" fill="#000"/>
+  </mask></defs>
+  <ellipse cx="200" cy="250" rx="118" ry="128" fill="#3D4C66" mask="url(#laptop)"/>
+  <ellipse cx="200" cy="252" rx="84" ry="100" fill="#FFFFFF" mask="url(#laptop)"/>
+  <path d="M92 204 A108 108 0 0 1 308 204 L290 204 A90 90 0 0 0 110 204 Z" fill="#F07A55"/>
+  <rect x="76" y="184" width="36" height="58" rx="15" fill="#F07A55"/>
+  <rect x="288" y="184" width="36" height="58" rx="15" fill="#F07A55"/>
+  <path d="M184 222 Q200 218 216 222 L200 240 Z" fill="#F5B83D"/>
+  <ellipse data-sw="soft" cx="146" cy="234" rx="13" ry="8" fill="#F29A9A"/>
+  <ellipse data-sw="soft" cx="254" cy="234" rx="13" ry="8" fill="#F29A9A"/>
+  <rect x="116" y="272" width="168" height="106" rx="12" fill="#8A93A3"/>
+  <rect x="130" y="285" width="140" height="80" rx="6" fill="#33405A"/>
+  <circle cx="168" cy="202" r="11" fill="#2A2522"/>
+  <circle cx="232" cy="202" r="11" fill="#2A2522"/>
+  <circle data-sw="ink" cx="172" cy="198" r="3.5" fill="#fff"/>
+  <circle data-sw="ink" cx="236" cy="198" r="3.5" fill="#fff"/>
+  <text data-sw="ink" x="150" y="342" font-family="Menlo, monospace" font-weight="700" font-size="46" fill="#8EF0B6">&gt;_</text>
+</svg>`,
+  '机器人': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 20 320 380">
+  <line x1="200" y1="114" x2="200" y2="80" fill="none"/>
+  <path d="M200 36 Q204 58 222 62 Q204 66 200 88 Q196 66 178 62 Q196 58 200 36Z" fill="#F07A55"/>
+  <rect x="120" y="318" width="160" height="80" rx="36" fill="#FBF6EC"/>
+  <rect x="54" y="182" width="28" height="64" rx="12" fill="#8A93A3"/>
+  <rect x="318" y="182" width="28" height="64" rx="12" fill="#8A93A3"/>
+  <rect x="76" y="114" width="248" height="196" rx="56" fill="#FBF6EC"/>
+  <rect x="104" y="142" width="192" height="138" rx="38" fill="#2C3442"/>
+  <ellipse data-sw="soft" cx="132" cy="250" rx="12" ry="7" fill="#F29A9A"/>
+  <ellipse data-sw="soft" cx="268" cy="250" rx="12" ry="7" fill="#F29A9A"/>
+  <path data-sw="ink" d="M144 216 Q160 192 176 216 M224 216 Q240 192 256 216" fill="none" stroke="#7BE3A6" stroke-width="11" stroke-linecap="round"/>
+  <path data-sw="ink" d="M178 242 Q200 260 222 242" fill="none" stroke="#7BE3A6" stroke-width="8" stroke-linecap="round"/>
+</svg>`,
+  '橘猫': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="60 40 300 320">
+  <polygon points="104,172 120,72 194,132" fill="#F0A05A"/>
+  <polygon points="296,172 280,72 206,132" fill="#F0A05A"/>
+  <polygon data-sw="soft" points="124,150 131,102 168,134" fill="#FFD0AE"/>
+  <polygon data-sw="soft" points="276,150 269,102 232,134" fill="#FFD0AE"/>
+  <ellipse cx="200" cy="232" rx="130" ry="118" fill="#F0A05A"/>
+  <ellipse cx="200" cy="284" rx="62" ry="44" fill="#FFF6EA"/>
+  <path d="M182 128 L186 152 M200 122 L200 150 M218 128 L214 152" fill="none"/>
+  <circle cx="152" cy="220" r="34" fill="#FFFFFF"/>
+  <circle cx="248" cy="220" r="34" fill="#FFFFFF"/>
+  <path d="M186 218 Q200 210 214 218" fill="none"/>
+  <path d="M190 266 L210 266 L200 278Z" fill="#E5737A"/>
+  <path d="M200 278 Q192 294 180 290 M200 278 Q208 294 220 290" fill="none"/>
+  <path d="M86 270 L132 276 M84 290 L130 288 M314 270 L268 276 M316 290 L270 288" fill="none"/>
+  <path d="M322 48 Q327 76 350 82 Q327 88 322 116 Q317 88 294 82 Q317 76 322 48Z" fill="#F7D75E"/>
+  <circle cx="152" cy="222" r="11" fill="#2A2522"/>
+  <circle cx="248" cy="222" r="11" fill="#2A2522"/>
+  <circle data-sw="ink" cx="156" cy="218" r="3.5" fill="#fff"/>
+  <circle data-sw="ink" cx="252" cy="218" r="3.5" fill="#fff"/>
+</svg>`
+};
+
+/* ---------- 画风预设（参数按 400 单位高的画布调好） ---------- */
+const PRESETS = {
+  wash:   { jitter: 6, line: 4.5, offset: 5, paper: .28, fill: 'wash',   ghost: .35 },
+  crayon: { jitter: 5, line: 6,   offset: 0, paper: .28, fill: 'crayon', ghost: .35 },
+  pencil: { jitter: 6, line: 3.5, offset: 0, paper: .34, fill: 'none',   ghost: .5  },
+};
+const FRAMES = { square: 400, banner: 1500, original: 1200 }; // 默认导出宽度
+
+const state = {
+  source: null,      // { svg: 已清理并测量过的 <svg>, vb: [x, y, w, h] }
+  preset: 'wash',
+  frame: 'square',
+  params: { ...PRESETS.wash, pad: .12, paperColor: '#F8F1E4', ink: '#2A2522', blob: true, blobColor: '#C8D3EC', tint: '#F07A55' },
+  seeds: newSeeds(),
+  output: '',
+};
+
+function newSeeds() {
+  const r = () => Math.floor(Math.random() * 1000);
+  return { wash: r(), grain: r(), crayon: r(), streak: r(), penA: r(), penAgrain: r(), penB: r(), paper: r() };
+}
+
+/* ---------- 安全：清理导入的 SVG（白名单） ---------- */
+// SVG 是 XML，可以带脚本、外部资源和别的命名空间的元素。
+// 这里只保留白名单里的 SVG 元素、属性和样式，其他一律删掉。不靠正则去“认出”危险写法。
+const MAX_BYTES = 2 * 1024 * 1024;
+const MAX_NODES = 20000;
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const XLINK_NS = 'http://www.w3.org/1999/xlink';
+const ALLOWED = new Set(['svg', 'g', 'defs', 'symbol', 'use', 'title', 'desc',
+  'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text', 'tspan', 'textPath',
+  'linearGradient', 'radialGradient', 'stop', 'clipPath', 'mask', 'pattern', 'marker',
+  'filter', 'feGaussianBlur', 'feOffset', 'feBlend', 'feColorMatrix', 'feComposite', 'feFlood',
+  'feMerge', 'feMergeNode', 'feMorphology', 'feTurbulence', 'feDisplacementMap', 'feDropShadow',
+  'feComponentTransfer', 'feFuncR', 'feFuncG', 'feFuncB', 'feFuncA']);
+const UNWRAP = new Set(['a', 'switch']);           // 换成普通 <g>，保留里面的图形
+const RASTER = new Set(['image', 'feImage', 'img', 'picture', 'video', 'canvas']);
+const STYLE_PROPS = ['fill', 'fill-opacity', 'fill-rule', 'stroke', 'stroke-width', 'stroke-opacity',
+  'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-dasharray', 'stroke-dashoffset',
+  'opacity', 'color', 'display', 'visibility', 'clip-path', 'clip-rule', 'mask', 'filter',
+  'stop-color', 'stop-opacity', 'font-family', 'font-size', 'font-weight', 'font-style',
+  'text-anchor', 'dominant-baseline', 'letter-spacing', 'paint-order'];
+const LOCAL_REF = /^#[A-Za-z_][\w.:-]*$/;
+const LOCAL_URL = /^url\(\s*(['"]?)#[A-Za-z_][\w.:-]*\1\s*\)$/i;
+
+// 值里只要出现 url()，就必须是页内引用 url(#id)；反斜杠（CSS 转义）、javascript: 一律拒绝
+function safeValue(v) {
+  v = String(v).trim();
+  if (/[\\@]|javascript:|expression\s*\(|image-set|-webkit-image-set/i.test(v)) return null;
+  if (/url\s*\(/i.test(v)) return LOCAL_URL.test(v) ? v : null;
+  return v;
+}
+
+// <style> 不直接保留：让浏览器解析，只把白名单里的属性写回匹配的元素。
+// 构造出来的样式表没有挂到页面上，不会加载任何资源；@import、@font-face 都被跳过。
+function inlineStylesheets(root) {
+  const styles = [...root.getElementsByTagNameNS(SVG_NS, 'style')];
+  if (!styles.length) return;
+  const sheet = new CSSStyleSheet();
+  try { sheet.replaceSync(styles.map(s => s.textContent).join('\n')); } catch { return; }
+  const original = new WeakMap(); // 元素原本的内联样式优先级最高，不能被覆盖
+  for (const rule of sheet.cssRules) {
+    if (!(rule instanceof CSSStyleRule)) continue;
+    let targets;
+    try { targets = root.querySelectorAll(rule.selectorText); } catch { continue; }
+    for (const el of targets) {
+      if (!el.style) continue;
+      if (!original.has(el)) original.set(el, new Set([...el.style]));
+      for (const prop of STYLE_PROPS) {
+        const v = rule.style.getPropertyValue(prop);
+        const clean = v && safeValue(v);
+        if (clean && !original.get(el).has(prop)) el.style.setProperty(prop, clean);
+      }
+    }
+  }
+}
+
+function cleanAttributes(el) {
+  for (const attr of [...el.attributes]) {
+    const { namespaceURI: ns, localName: name, value } = attr;
+    if (name === 'href' && (ns === null || ns === XLINK_NS)) {
+      if (!LOCAL_REF.test(value.trim())) el.removeAttributeNode(attr);
+    } else if (ns !== null || name.toLowerCase().startsWith('on')) {
+      el.removeAttributeNode(attr);                 // xml:*、xmlns:*、其他命名空间、事件属性
+    } else if (name === 'style') {
+      const parts = [];
+      for (const prop of STYLE_PROPS) {
+        const v = el.style?.getPropertyValue(prop);
+        const clean = v && safeValue(v);
+        if (clean) parts.push(`${prop}:${clean}`);
+      }
+      if (parts.length) el.setAttribute('style', parts.join(';')); else el.removeAttribute('style');
+    } else if (safeValue(value) === null) {
+      el.removeAttributeNode(attr);
+    }
+  }
+}
+
+function sanitize(text) {
+  if (text.length > MAX_BYTES) throw new Error('文件太大了（超过 2 MB）。');
+  if (/<!ENTITY/i.test(text)) throw new Error('不支持带实体声明（<!ENTITY>）的 SVG。');
+  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+  const root = doc.documentElement;
+  if (doc.querySelector('parsererror') || root.namespaceURI !== SVG_NS || root.localName !== 'svg') {
+    throw new Error('这不是有效的 SVG 文件。');
+  }
+  if (root.getElementsByTagName('*').length > MAX_NODES) throw new Error('这个 SVG 太复杂了（元素超过 2 万个）。');
+
+  inlineStylesheets(root);
+  let images = 0;
+  const walk = parent => {
+    for (let el of [...parent.children]) {
+      if (RASTER.has(el.localName)) { images++; el.remove(); continue; }
+      if (el.namespaceURI !== SVG_NS) { el.remove(); continue; }
+      if (UNWRAP.has(el.localName)) {
+        const g = doc.createElementNS(SVG_NS, 'g');
+        for (const a of [...el.attributes]) g.setAttributeNodeNS(a.cloneNode());
+        g.append(...el.childNodes);
+        el.replaceWith(g);
+        el = g;
+      } else if (!ALLOWED.has(el.localName)) {
+        el.remove();
+        continue;
+      }
+      cleanAttributes(el);
+      walk(el);
+    }
+  };
+  cleanAttributes(root);
+  walk(root);
+
+  // <use> 只能引用不含 <use> 的图形，防止层层引用、指数膨胀
+  for (const use of root.getElementsByTagNameNS(SVG_NS, 'use')) {
+    const ref = (use.getAttribute('href') || use.getAttributeNS(XLINK_NS, 'href') || '').slice(1);
+    const target = ref && root.querySelector(`[id="${CSS.escape(ref)}"]`);
+    if (target && (target.localName === 'use' || target.getElementsByTagNameNS(SVG_NS, 'use').length)) {
+      throw new Error('不支持多层嵌套的 <use>。');
+    }
+  }
+  return { root, images };
+}
+
+/* ---------- 测量：确定画布范围，找出“墨迹”元素 ---------- */
+// 放进 closed shadow DOM 里渲染：SVG 里的 <style> 不会影响页面本身
+const host = document.createElement('div');
+host.style.cssText = 'position:absolute;left:-10000px;top:0;width:400px;height:400px;overflow:hidden;visibility:hidden';
+document.body.append(host);
+const shadow = host.attachShadow({ mode: 'closed' });
+
+const num = v => { const n = parseFloat(v); return Number.isFinite(n) && n > 0 ? n : null; };
+
+function luminance(color) {
+  const m = /rgba?\(([^)]+)\)/.exec(color);
+  if (!m) return null;
+  const [r, g, b, a = 1] = m[1].split(/[\s,\/]+/).map(Number);
+  if (a < .5) return null;
+  const lin = c => { c /= 255; return c <= .03928 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4; };
+  return .2126 * lin(r) + .7152 * lin(g) + .0722 * lin(b);
+}
+
+const SHAPES = 'path,rect,circle,ellipse,polygon,polyline,line,text';
+const NON_RENDERED = 'defs,clipPath,mask,pattern,marker,symbol';
+
+function measure(root) {
+  let vb = (root.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+  if (vb.length !== 4 || vb.some(n => !Number.isFinite(n)) || vb[2] <= 0 || vb[3] <= 0) {
+    const w = num(root.getAttribute('width')), h = num(root.getAttribute('height'));
+    vb = w && h ? [0, 0, w, h] : null;
+  }
+  const svg = document.importNode(root, true);
+  shadow.replaceChildren(svg);
+  if (!vb) {
+    const b = svg.getBBox();
+    if (!(b.width > 0 && b.height > 0)) throw new Error('这个 SVG 里没有可见的图形。');
+    vb = [b.x, b.y, b.width, b.height];
+  }
+  const [, , vw, vh] = vb;
+  if (!vb.every(Number.isFinite) || vw < 1e-6 || vh < 1e-6 || vw > 1e7 || vh > 1e7 || vw / vh > 50 || vh / vw > 50) {
+    shadow.replaceChildren();
+    throw new Error('这个 SVG 的尺寸不正常（太大、太小或太扁）。');
+  }
+  svg.setAttribute('viewBox', vb.join(' '));
+  svg.setAttribute('width', 400);
+  svg.setAttribute('height', 400 * vb[3] / vb[2]);
+
+  // 又小又深的实心图形（眼睛、小字）当作“墨迹”：线稿层保持原色，不改成描边
+  const box = svg.getBoundingClientRect();
+  const total = box.width * box.height;
+  for (const el of svg.querySelectorAll(SHAPES)) {
+    if (el.closest(NON_RENDERED)) continue;
+    const hint = el.closest('[data-sw]')?.getAttribute('data-sw');
+    if (hint === 'ink' || hint === 'soft') { el.classList.add('sw-' + hint); continue; }
+    const cs = getComputedStyle(el);
+    if (cs.stroke !== 'none' && parseFloat(cs.strokeWidth) > 0) el.setAttribute('data-sw-w', parseFloat(cs.strokeWidth));
+    const lum = luminance(cs.fill);
+    if (lum === null || lum > .1 || parseFloat(cs.fillOpacity) < .5) continue;
+    const r = el.getBoundingClientRect();
+    if (total > 0 && (r.width * r.height) / total < .03) el.classList.add('sw-ink');
+  }
+  shadow.replaceChildren(); // 测完马上从页面里移走
+  return { svg, vb };
+}
+
+/* ---------- 生成手绘版 SVG ---------- */
+function frameSize(frame, vb) {
+  if (frame === 'square') return { W: 400, H: 400 };
+  if (frame === 'banner') return { W: 1200, H: 400 };
+  return { W: Math.round(Math.min(1600, Math.max(160, 400 * vb[2] / vb[3]))), H: 400 };
+}
+
+function build() {
+  const { source, params: p, seeds: s, frame } = state;
+  const preset = PRESETS[state.preset];
+  const { W, H } = frameSize(frame, source.vb);
+  const pad = Math.min(W, H) * p.pad;
+  const k = Math.min((W - 2 * pad) / source.vb[2], (H - 2 * pad) / source.vb[3]); // 原图单位 → 画布单位
+  const id = 'sw' + Math.random().toString(36).slice(2, 8);
+
+  // 原图嵌进一个子 <svg>，滤镜作用在外层画布坐标上，所以不管原图是 24px 图标还是 2000px 插画，效果一致
+  const nested = source.svg.cloneNode(true);
+  for (const a of ['id', 'width', 'height', 'x', 'y', 'style']) nested.removeAttribute(a);
+  Object.entries({ x: pad, y: pad, width: W - 2 * pad, height: H - 2 * pad,
+    viewBox: source.vb.join(' '), preserveAspectRatio: 'xMidYMid meet', overflow: 'visible' })
+    .forEach(([a, v]) => nested.setAttribute(a, v));
+  const fillsNested = nested.cloneNode(true);
+  const cap = p.line * 2.5 / k;
+  for (const el of fillsNested.querySelectorAll('[data-sw-w]')) {
+    if (Number(el.getAttribute('data-sw-w')) > cap) el.style.strokeWidth = cap.toFixed(3) + 'px';
+  }
+  const inner = new XMLSerializer().serializeToString(nested);
+  const fillsInner = new XMLSerializer().serializeToString(fillsNested);
+
+  const lw = (p.line / k).toFixed(3);
+  const skip = `:not(:is(${NON_RENDERED}) *)`;
+  const css = `
+#${id} .sw-fills .sw-ink { display: none }
+#${id} .sw-lines .sw-soft { display: none }
+#${id} .sw-lines :is(path,rect,circle,ellipse,polygon,polyline,line):not(.sw-ink)${skip} {
+  fill: none !important; stroke: ${p.ink} !important; stroke-width: ${lw}px !important;
+  stroke-opacity: 1 !important; stroke-dasharray: none !important;
+  stroke-linecap: round !important; stroke-linejoin: round !important }
+#${id} .sw-lines text:not(.sw-ink)${skip} { fill: ${p.ink} !important; stroke: none !important }`;
+
+  // 铅笔线：大尺度噪声推歪线条 + 细颗粒让线条断断续续；两个随机种子各画一遍，像描了两遍
+  const grainMask = (seed, freq, values) => `
+    <feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="2" seed="${seed}" result="g"/>
+    <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  ${values}" result="ga"/>
+    <feComposite in="d" in2="ga" operator="in"/>`;
+  const warp = (seed, freq, scale) => `
+    <feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="2" seed="${seed}" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="d"/>`;
+  const region = 'x="-10%" y="-10%" width="120%" height="120%"';
+  const defs = `
+<filter id="${id}-wash" ${region}>${warp(s.wash, .02, (p.jitter * 2.3).toFixed(1))}${grainMask(s.grain, .9, '0 0 0 -1.1 1.3')}</filter>
+<filter id="${id}-crayon" ${region}>${warp(s.crayon, .03, (p.jitter * 1.3).toFixed(1))}${grainMask(s.streak, '0.9 0.12', '0 0 0 5 -1.7')}</filter>
+<filter id="${id}-penA" ${region}>${warp(s.penA, .035, p.jitter)}${grainMask(s.penAgrain, 1.4, '0 0 0 -1.4 1.5')}</filter>
+<filter id="${id}-penB" ${region}>${warp(s.penB, .035, (p.jitter * 1.17).toFixed(1))}</filter>
+<filter id="${id}-paper"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" seed="${s.paper}"/>
+  <feColorMatrix type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.36  0 0 0 0 0.28  0 0 0 ${p.paper} 0"/></filter>`;
+
+  const blobFilter = preset.fill === 'crayon' ? 'crayon' : 'wash';
+  const blob = p.blob
+    ? `<ellipse cx="${W / 2 + 8}" cy="${H / 2 + 6}" rx="${(W - pad) / 2}" ry="${(H - pad) / 2}" fill="${p.blobColor}" filter="url(#${id}-${blobFilter})" opacity=".8"/>`
+    : '';
+  const fills = preset.fill === 'none' ? '' :
+    `<g class="sw-fills" transform="translate(${p.offset} ${p.offset * .8})" filter="url(#${id}-${preset.fill})" opacity=".92" color="${p.tint}">${fillsInner}</g>`;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="${id}" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+<style>${css}</style>
+<defs>${defs}</defs>
+<rect width="${W}" height="${H}" fill="${p.paperColor}"/>
+${blob}
+${fills}
+<g class="sw-lines" filter="url(#${id}-penB)" opacity="${preset.ghost}" color="${p.ink}">${inner}</g>
+<g class="sw-lines" filter="url(#${id}-penA)" color="${p.ink}">${inner}</g>
+<rect width="${W}" height="${H}" filter="url(#${id}-paper)"/>
+</svg>`;
+}
+
+/* ---------- 界面 ---------- */
+const $ = sel => document.querySelector(sel);
+const urls = {};
+function showImg(el, svgText) {
+  // 用 <img> 显示：浏览器不会运行图片里的脚本，也不会加载外部资源，多一层保护
+  if (urls[el.id]) URL.revokeObjectURL(urls[el.id]);
+  urls[el.id] = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml' }));
+  el.src = urls[el.id];
+}
+
+function message(text, kind = 'notice') {
+  const m = $('#msg');
+  m.textContent = text || '';
+  m.className = 'msg ' + kind;
+  m.hidden = !text;
+}
+
+let queued = false;
+function render() {
+  if (queued || !state.source) return;
+  queued = true;
+  requestAnimationFrame(() => {
+    queued = false;
+    state.output = build();
+    showImg($('#after'), state.output);
+    const square = state.frame === 'square';
+    $('#after').classList.toggle('circle', square && $('#circle').checked);
+    $('#circleWrap').hidden = !square;
+    updateExportSize();
+  });
+}
+
+function load(text) {
+  try {
+    const { root, images } = sanitize(text);
+    state.source = measure(root);
+    showImg($('#before'), new XMLSerializer().serializeToString(state.source.svg));
+    message(images ? `已移除 ${images} 张内嵌位图。sketchwash 只处理矢量图形，不处理照片。` : '');
+    render();
+  } catch (err) {
+    shadow.replaceChildren();
+    message(err.message, 'error');
+  }
+}
+
+async function loadFile(file) {
+  if (!file) return;
+  const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name);
+  if (!isSvg) {
+    message('只支持 SVG 矢量图。照片、PNG、JPG 不支持，这是有意的设计：避免被用来处理真人照片。', 'error');
+    return;
+  }
+  load(await file.text());
+}
+
+function syncControls() {
+  const p = state.params;
+  for (const key of ['jitter', 'line', 'offset', 'paper', 'pad']) {
+    $('#' + key).value = p[key];
+    $(`output[for=${key}]`).textContent = key === 'paper' || key === 'pad' ? Math.round(p[key] * 100) + '%' : p[key];
+  }
+  $('#offset').disabled = PRESETS[state.preset].fill === 'none';
+  for (const key of ['paperColor', 'ink', 'blobColor', 'tint']) $('#' + key).value = p[key];
+  $('#blob').checked = p.blob;
+  $('#blobColor').disabled = !p.blob;
+}
+
+function updateExportSize() {
+  if (!state.source) return;
+  const { W, H } = frameSize(state.frame, state.source.vb);
+  const w = Number($('#exportW').value) || FRAMES[state.frame];
+  $('#exportH').textContent = `× ${Math.round(w * H / W)} 像素`;
+}
+
+function pressed(groupSel, attr, value) {
+  for (const b of document.querySelectorAll(`${groupSel} button`)) b.setAttribute('aria-pressed', b.dataset[attr] === value);
+}
+
+// 画风
+$('#presets').addEventListener('click', e => {
+  const name = e.target.closest('button')?.dataset.preset;
+  if (!name) return;
+  state.preset = name;
+  Object.assign(state.params, PRESETS[name]);
+  pressed('#presets', 'preset', name);
+  syncControls(); render();
+});
+
+// 滑块和颜色
+for (const key of ['jitter', 'line', 'offset', 'paper', 'pad']) {
+  $('#' + key).addEventListener('input', e => { state.params[key] = Number(e.target.value); syncControls(); render(); });
+}
+for (const key of ['paperColor', 'ink', 'blobColor', 'tint']) {
+  $('#' + key).addEventListener('input', e => { state.params[key] = e.target.value; render(); });
+}
+$('#blob').addEventListener('change', e => { state.params.blob = e.target.checked; syncControls(); render(); });
+$('#reseed').addEventListener('click', () => { state.seeds = newSeeds(); render(); });
+$('#circle').addEventListener('change', render);
+
+// 画布
+$('#frames').addEventListener('click', e => {
+  const name = e.target.closest('button')?.dataset.frame;
+  if (!name) return;
+  state.frame = name;
+  $('#exportW').value = FRAMES[name];
+  pressed('#frames', 'frame', name);
+  render();
+});
+$('#exportW').addEventListener('input', updateExportSize);
+
+// 输入：选择文件、拖放、粘贴、示例
+$('#file').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
+const drop = $('#drop');
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); loadFile(e.dataTransfer.files[0]); });
+window.addEventListener('paste', e => {
+  if (e.target.closest?.('input')) return;
+  const file = [...e.clipboardData.files][0];
+  if (file) { e.preventDefault(); loadFile(file); return; }
+  const text = e.clipboardData.getData('text');
+  if (/<svg[\s>]/i.test(text)) { e.preventDefault(); load(text); }
+});
+for (const name of Object.keys(EXAMPLES)) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'chip'; b.textContent = name;
+  b.addEventListener('click', () => load(EXAMPLES[name]));
+  $('#examples').append(b);
+}
+
+// 导出
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('#dlSvg').addEventListener('click', () => {
+  if (!state.output) return;
+  download(new Blob([state.output], { type: 'image/svg+xml' }), 'sketchwash.svg');
+});
+$('#dlPng').addEventListener('click', async () => {
+  if (!state.output) return;
+  const { W, H } = frameSize(state.frame, state.source.vb);
+  let outW = Math.min(4096, Math.max(64, Math.round(Number($('#exportW').value) || FRAMES[state.frame])));
+  let outH = Math.round(outW * H / W);
+  if (outH > 4096) { outH = 4096; outW = Math.round(4096 * W / H); } // 限制导出像素，防止占满内存
+  const img = new Image();
+  const url = URL.createObjectURL(new Blob([state.output], { type: 'image/svg+xml' }));
+  try {
+    img.src = url;
+    await img.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = outW; canvas.height = outH;
+    canvas.getContext('2d').drawImage(img, 0, 0, outW, outH);
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    download(blob, `sketchwash-${outW}x${outH}.png`);
+  } catch {
+    message('导出失败了。请换一个浏览器（推荐 Chrome）再试一次。', 'error');
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+});
+
+// 启动
+$('#exportW').value = FRAMES.square;
+syncControls();
+load(EXAMPLES['灯泡']);
+</script>
+</body>
+</html>
