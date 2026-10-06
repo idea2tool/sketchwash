@@ -7,41 +7,46 @@
 <meta name="description" content="Turn any SVG into a hand-drawn watercolor sketch and export avatars and banners. Runs in your browser. 把 SVG 变成手绘水彩风格，导出头像和横幅。">
 <style>
 :root {
-  --bg: #F6F3EE;
+  --bg: #ECEEF1;
   --surface: #FFFFFF;
-  --surface-2: #EFEAE3;
-  --text: #24211E;
-  --text-2: #6B645C;
-  --text-3: #9A938A;
-  --accent: #C9542F;
-  --accent-hover: #B2482A;
+  --surface-2: #F1F3F6;
+  --text: #0E1116;
+  --text-2: #4A5260;
+  --text-3: #8A92A0;
+  --accent: #2747FF;
+  --accent-hover: #1834D6;
   --on-accent: #FFFFFF;
-  --accent-soft: #F6E1D8;
-  --notice-bg: #FFF4D6;
-  --notice-text: #6B5410;
-  --error-bg: #FBE3E1;
-  --error-text: #8C1D18;
-  --focus: #2F6FDE;
-  --shadow: 0 4px 6px rgba(40, 30, 20, .05), 0 1px 3px rgba(40, 30, 20, .08);
-  --radius: 14px;
+  --accent-soft: #E1E6FF;
+  --mark: #FFE45C;
+  --notice-bg: #FFF6CC;
+  --notice-text: #5C4A00;
+  --error-bg: #FDE4E1;
+  --error-text: #A1170D;
+  --focus: #2747FF;
+  --shadow: none;
+  --hard: 0 3px 0 #0E1116;
+  --radius: 6px;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #171513;
-    --surface: #23201E;
-    --surface-2: #2F2B28;
-    --text: #F1ECE6;
-    --text-2: #B8B0A6;
-    --text-3: #857D74;
-    --accent: #E8774F;
-    --accent-hover: #F08A64;
-    --on-accent: #1A1410;
-    --accent-soft: #3A2A22;
-    --notice-bg: #3A3220;
-    --notice-text: #EBD9A6;
-    --error-bg: #3D2321;
-    --error-text: #F2B8B3;
-    --shadow: none;
+    --bg: #0B0D10;
+    --surface: #15181D;
+    --surface-2: #1D2127;
+    --text: #F1F3F6;
+    --text-2: #B3BAC5;
+    --text-3: #7C8592;
+    --accent: #7C8CFF;
+    --accent-hover: #9AA6FF;
+    --on-accent: #0B0D10;
+    --accent-soft: #1D2240;
+    --mark: #8A7414;
+    --notice-bg: #33300F;
+    --notice-text: #F0E3A0;
+    --error-bg: #3A1714;
+    --error-text: #FFB4AB;
+    --focus: #7C8CFF;
+    --hard: 0 3px 0 #000;
   }
 }
 * { box-sizing: border-box; }
@@ -53,8 +58,9 @@ body {
 }
 header { max-width: 1180px; margin: 0 auto; padding: 32px 16px 8px; }
 .topline { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
-h1 span { color: var(--text-3); font-weight: 500; }
+h1 { margin: 0; font: 800 28px/1 var(--mono); letter-spacing: -.03em; }
+h1 .logo { background: linear-gradient(transparent 58%, var(--mark) 58%); padding: 0 2px; }
+h1 span[data-i18n] { font: 600 16px var(--mono); letter-spacing: 0; color: var(--text-3); margin-left: 8px; }
 .tagline { margin: 6px 0 0; color: var(--text-2); }
 main {
   max-width: 1180px; margin: 0 auto; padding: 16px;
@@ -66,11 +72,11 @@ main {
 }
 .panel { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
 .panel + .panel { margin-top: 16px; }
-h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--text-2); letter-spacing: .04em; }
+h2 { margin: 0 0 12px; font: 700 13px var(--mono); color: var(--text); text-transform: lowercase; }
 
 /* 输入区 */
 .drop {
-  display: block; padding: 22px 14px; border-radius: 10px; text-align: center; cursor: pointer;
+  display: block; padding: 22px 14px; border-radius: var(--radius); text-align: center; cursor: pointer;
   background: var(--surface-2); color: var(--text-2);
   outline: 2px dashed transparent; outline-offset: -6px; transition: outline-color .15s, background .15s;
 }
@@ -83,43 +89,44 @@ h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--text-2); 
 .examples > span { color: var(--text-3); font-size: 13px; }
 
 /* 按钮层级：一个实心主按钮，其余用浅底或链接样式 */
-button { font: inherit; cursor: pointer; border: 0; border-radius: 8px; }
+button { font: inherit; cursor: pointer; border: 0; border-radius: var(--radius); }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.btn-primary { background: var(--accent); color: var(--on-accent); font-weight: 600; padding: 10px 16px; }
+.btn-primary { background: var(--accent); color: var(--on-accent); font-weight: 700; padding: 10px 18px; box-shadow: var(--hard); }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--text); }
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-secondary { background: var(--surface-2); color: var(--text); font-weight: 500; padding: 10px 14px; }
 .btn-secondary:hover { background: var(--accent-soft); }
-.chip { background: var(--surface-2); color: var(--text); padding: 4px 12px; border-radius: 999px; font-size: 13px; }
+.chip { background: var(--surface-2); color: var(--text); padding: 4px 10px; border-radius: var(--radius); font: 13px var(--mono); }
 .chip:hover { background: var(--accent-soft); }
 .link { background: none; color: var(--accent); padding: 0; font-weight: 500; }
 .link:hover { text-decoration: underline; }
 
 /* 分段选择 */
-.seg { display: flex; background: var(--surface-2); border-radius: 10px; padding: 3px; gap: 3px; }
+.seg { display: flex; background: var(--surface-2); border-radius: var(--radius); padding: 3px; gap: 3px; }
 .seg button { flex: 1; padding: 7px 6px; background: none; color: var(--text-2); font-weight: 500; border-radius: 7px; }
-.seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: var(--shadow); }
-@media (prefers-color-scheme: dark) { .seg button[aria-pressed="true"] { background: #3D3834; } }
+.seg button[aria-pressed="true"] { background: var(--text); color: var(--surface); font-weight: 700; }
+
 
 /* 滑块 */
 .field { margin-top: 14px; }
 .field label { display: flex; justify-content: space-between; font-size: 14px; color: var(--text); }
-.field output { color: var(--text-3); font-variant-numeric: tabular-nums; }
+.field output { color: var(--text-3); font: 13px var(--mono); }
 input[type=range] { width: 100%; margin: 6px 0 0; accent-color: var(--accent); }
 .colors { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 16px; }
 .color { font-size: 13px; color: var(--text-2); }
-.color input[type=color] { display: block; width: 100%; height: 34px; margin-top: 4px; padding: 0; border: 0; border-radius: 8px; background: none; cursor: pointer; }
+.color input[type=color] { display: block; width: 100%; height: 34px; margin-top: 4px; padding: 0; border: 0; border-radius: var(--radius); background: none; cursor: pointer; }
 .color label { display: flex; gap: 6px; align-items: center; }
 .row { display: flex; gap: 10px; align-items: center; margin-top: 14px; }
 .row label { font-size: 14px; }
 input[type=number] {
-  width: 96px; padding: 7px 8px; border: 0; border-radius: 8px;
+  width: 96px; padding: 7px 8px; border: 0; border-radius: var(--radius);
   background: var(--surface-2); color: var(--text); font: inherit;
 }
 .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
 .hint { margin: 10px 0 0; font-size: 13px; color: var(--text-3); }
 
 /* 提示条 */
-.msg { margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+.msg { margin-top: 12px; padding: 10px 12px; border-radius: var(--radius); font-size: 14px; }
 .msg.notice { background: var(--notice-bg); color: var(--notice-text); }
 .msg.error { background: var(--error-bg); color: var(--error-text); }
 .msg[hidden] { display: none; }
@@ -133,7 +140,7 @@ input[type=number] {
 }
 .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
 .card h2 { display: flex; justify-content: space-between; align-items: center; }
-.stage { display: grid; place-items: center; min-height: 220px; border-radius: 10px; background: var(--surface-2); padding: 12px; }
+.stage { display: grid; place-items: center; min-height: 220px; border-radius: var(--radius); background: var(--surface-2); padding: 12px; }
 .stage img { width: 100%; height: auto; max-height: 62vh; object-fit: contain; display: block; }
 .stage img.circle { border-radius: 50%; }
 .toggle { font-size: 13px; font-weight: 500; color: var(--text-2); display: flex; gap: 6px; align-items: center; }
@@ -148,7 +155,7 @@ footer a { color: var(--text-2); }
 <body>
 <header>
   <div class="topline">
-    <h1>sketchwash <span data-i18n="subtitle">手绘水彩滤镜</span></h1>
+    <h1><span class="logo">sketchwash</span><span data-i18n="subtitle">手绘水彩滤镜</span></h1>
     <button type="button" class="link" id="lang" lang="en">English</button>
   </div>
   <p class="tagline" data-i18n="tagline">把 SVG 变成铅笔线条加水彩上色的手绘风格，直接导出头像和横幅。</p>
@@ -157,7 +164,7 @@ footer a { color: var(--text-2); }
 <main>
   <div class="controls">
     <section class="panel">
-      <h2 data-i18n="step1">1 · 选择 SVG</h2>
+      <h2 data-i18n="step1">svg</h2>
       <label class="drop" id="drop">
         <input type="file" id="file" accept=".svg,image/svg+xml">
         <strong data-i18n="dropTitle">拖入 SVG 文件，或点这里选择</strong>
@@ -168,7 +175,7 @@ footer a { color: var(--text-2); }
     </section>
 
     <section class="panel">
-      <h2 data-i18n="step2">2 · 画风</h2>
+      <h2 data-i18n="step2">画风</h2>
       <div class="seg" id="presets" role="group" data-i18n-aria="step2">
         <button type="button" data-preset="wash" aria-pressed="true" data-i18n="wash">水彩</button>
         <button type="button" data-preset="crayon" aria-pressed="false" data-i18n="crayon">蜡笔</button>
@@ -192,7 +199,7 @@ footer a { color: var(--text-2); }
     </section>
 
     <section class="panel">
-      <h2 data-i18n="step3">3 · 导出</h2>
+      <h2 data-i18n="step3">导出</h2>
       <div class="seg" id="frames" role="group" data-i18n-aria="canvas">
         <button type="button" data-frame="square" aria-pressed="true" data-i18n="square">头像 1:1</button>
         <button type="button" data-frame="banner" aria-pressed="false" data-i18n="banner">横幅 3:1</button>
@@ -233,6 +240,28 @@ footer a { color: var(--text-2); }
 /* ---------- 示例（全部是原创图形） ---------- */
 // data-sw="ink"：保持原色的实心墨迹（眼睛、文字）；data-sw="soft"：不描边（腮红、高光）
 const EXAMPLES = {
+  headphones: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 20 270 250">
+  <defs><mask id="ears" maskUnits="userSpaceOnUse" x="0" y="0" width="320" height="300">
+    <rect width="320" height="300" fill="#fff"/><ellipse cx="150" cy="170" rx="92" ry="80" fill="#000"/>
+  </mask></defs>
+  <polygon points="72,124 80,40 136,96" fill="#A7B4C8" mask="url(#ears)"/>
+  <polygon points="228,124 220,40 164,96" fill="#A7B4C8" mask="url(#ears)"/>
+  <polygon data-sw="soft" points="86,110 91,64 122,94" fill="#F6C1C1"/>
+  <polygon data-sw="soft" points="214,110 209,64 178,94" fill="#F6C1C1"/>
+  <ellipse cx="150" cy="170" rx="92" ry="80" fill="#A7B4C8"/>
+  <ellipse cx="150" cy="202" rx="42" ry="28" fill="#FFF6EA"/>
+  <path d="M58 152 A92 92 0 0 1 242 152 L226 152 A76 76 0 0 0 74 152 Z" fill="#F07A55"/>
+  <rect x="42" y="138" width="36" height="62" rx="15" fill="#F07A55"/>
+  <rect x="222" y="138" width="36" height="62" rx="15" fill="#F07A55"/>
+  <path data-sw="ink" d="M106 172 Q120 156 134 172 M166 172 Q180 156 194 172" fill="none" stroke="#2A2522" stroke-width="6" stroke-linecap="round"/>
+  <path d="M142 190 L158 190 L150 199 Z" fill="#E5737A"/>
+  <path data-sw="ink" d="M150 199 Q144 211 135 207 M150 199 Q156 211 165 207" fill="none" stroke="#2A2522" stroke-width="4" stroke-linecap="round"/>
+  <ellipse data-sw="soft" cx="104" cy="198" rx="12" ry="7" fill="#F29A9A"/>
+  <ellipse data-sw="soft" cx="196" cy="198" rx="12" ry="7" fill="#F29A9A"/>
+  <circle cx="262" cy="98" r="11" fill="#7BE3A6"/>
+  <rect x="268" y="52" width="6" height="46" rx="3" fill="#7BE3A6"/>
+  <path d="M274 52 Q290 58 286 76 Q280 66 274 68 Z" fill="#7BE3A6"/>
+</svg>`,
   bulb: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 -10 330 370">
   <path d="M200 20 L200 2 M118 52 L104 38 M282 52 L296 38 M82 128 L62 124 M318 128 L338 124" fill="none"/>
   <path d="M140 225 A100 100 0 1 1 260 225 Q248 248 246 272 L154 272 Q152 248 140 225 Z" fill="#FFE08A"/>
@@ -751,13 +780,13 @@ const I18N = {
   zh: {
     title: 'sketchwash · 手绘水彩滤镜', switchTo: 'English',
     subtitle: '手绘水彩滤镜', tagline: '把 SVG 变成铅笔线条加水彩上色的手绘风格，直接导出头像和横幅。',
-    step1: '1 · 选择 SVG', dropTitle: '拖入 SVG 文件，或点这里选择', dropHint: '也可以直接粘贴 SVG 代码（⌘V / Ctrl+V）',
-    examples: '示例：', ex_bulb: '灯泡', ex_penguin: '企鹅', ex_robot: '机器人', ex_cat: '橘猫',
-    step2: '2 · 画风', wash: '水彩', crayon: '蜡笔', pencil: '铅笔线稿',
+    step1: 'svg', dropTitle: '拖入 SVG 文件，或点这里选择', dropHint: '也可以直接粘贴 SVG 代码（⌘V / Ctrl+V）',
+    examples: '示例：', ex_headphones: '耳机猫', ex_bulb: '灯泡', ex_penguin: '企鹅', ex_robot: '机器人', ex_cat: '橘猫',
+    step2: '画风', wash: '水彩', crayon: '蜡笔', pencil: '铅笔线稿',
     jitter: '线条抖动', line: '线条粗细', offset: '颜色错位', paper: '纸张纹理', pad: '留白',
     paperColor: '纸张', ink: '线条', blob: '背景色块', blobColor: '背景色块颜色',
     tint: '单色部分', tintHint: '原图里用 currentColor 的部分（常见于线条图标）上色时用这个颜色。', reseed: '换一种笔触 ↻',
-    step3: '3 · 导出', canvas: '画布', square: '头像 1:1', banner: '横幅 3:1', original: '原比例',
+    step3: '导出', canvas: '画布', square: '头像 1:1', banner: '横幅 3:1', original: '原比例',
     exportW: '导出宽度', px: '× {h} 像素', dlPng: '下载 PNG', dlSvg: '下载 SVG', sizeHint: 'X 头像建议 400×400，横幅建议 1500×500。',
     before: '原图', beforeAlt: '原图预览', after: '手绘版', afterAlt: '手绘版预览', circle: '圆形裁切预览',
     privacy: '全部在你的浏览器里运行，文件不会上传到任何地方。只支持 SVG 矢量图，不支持照片：这是有意的设计。',
@@ -773,13 +802,13 @@ const I18N = {
   en: {
     title: 'sketchwash · hand-drawn watercolor filter', switchTo: '中文',
     subtitle: 'hand-drawn watercolor filter', tagline: 'Turn any SVG into pencil lines and watercolor fills. Export avatars and banners in one click.',
-    step1: '1 · Pick an SVG', dropTitle: 'Drop an SVG file here, or click to choose', dropHint: 'You can also paste SVG code (⌘V / Ctrl+V)',
-    examples: 'Examples:', ex_bulb: 'Bulb', ex_penguin: 'Penguin', ex_robot: 'Robot', ex_cat: 'Cat',
-    step2: '2 · Style', wash: 'Watercolor', crayon: 'Crayon', pencil: 'Pencil only',
+    step1: 'svg', dropTitle: 'Drop an SVG file here, or click to choose', dropHint: 'You can also paste SVG code (⌘V / Ctrl+V)',
+    examples: 'Examples:', ex_headphones: 'Headphone cat', ex_bulb: 'Bulb', ex_penguin: 'Penguin', ex_robot: 'Robot', ex_cat: 'Cat',
+    step2: 'style', wash: 'Watercolor', crayon: 'Crayon', pencil: 'Pencil only',
     jitter: 'Line wobble', line: 'Line width', offset: 'Color offset', paper: 'Paper grain', pad: 'Padding',
     paperColor: 'Paper', ink: 'Lines', blob: 'Backdrop', blobColor: 'Backdrop color',
     tint: 'Mono parts', tintHint: 'Used to color parts drawn with currentColor (common in line icons).', reseed: 'New strokes ↻',
-    step3: '3 · Export', canvas: 'Canvas', square: 'Avatar 1:1', banner: 'Banner 3:1', original: 'Original',
+    step3: 'export', canvas: 'Canvas', square: 'Avatar 1:1', banner: 'Banner 3:1', original: 'Original',
     exportW: 'Width', px: '× {h} px', dlPng: 'Download PNG', dlSvg: 'Download SVG', sizeHint: 'For X: avatar 400×400, banner 1500×500.',
     before: 'Original', beforeAlt: 'Original preview', after: 'Hand-drawn', afterAlt: 'Hand-drawn preview', circle: 'Circle crop',
     privacy: 'Runs entirely in your browser. Nothing is uploaded. SVG only, no photos, by design.',
@@ -829,7 +858,7 @@ $('#lang').addEventListener('click', () => {
 $('#exportW').value = FRAMES.square;
 syncControls();
 applyLang();
-load(EXAMPLES.bulb);
+load(EXAMPLES.headphones);
 </script>
 </body>
 </html>
