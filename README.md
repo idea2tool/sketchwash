@@ -6,7 +6,7 @@ Turn any SVG into a **hand-drawn watercolor sketch**: wobbly pencil lines, water
 
 [中文说明](#中文说明)
 
-![sketchwash screenshot](docs/screenshot-en.png)
+![sketchwash demo: switching styles and examples](docs/demo.gif)
 
 ## Features
 
